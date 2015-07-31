@@ -1,0 +1,7 @@
+# srun -w node0,node0 -n2 -l --multi-prog run-config
+
+0	./build/pingpong node0 ipc:///tmp/pipeline.ipc
+1	bash -c './build/pingpong node1 ipc:///tmp/pipeline.ipc Hello; ./build/pingpong node1 ipc:///tmp/pipeline.ipc x'
+
+#0	./build/pingpong node0 tcp:///node1:12345
+#1	./build/pingpong node1 tcp:///node0:12345 x
