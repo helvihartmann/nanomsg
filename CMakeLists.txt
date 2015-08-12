@@ -14,5 +14,5 @@ target_link_libraries(pipeline /usr/local/lib/libnanomsg.a -pthread -lanl)
 add_executable(pingpong pingpong.c)
 target_link_libraries(pingpong /usr/local/lib/libnanomsg.a -pthread -lanl)
 
-add_executable(pingpongint pingpong_int.c)
-target_link_libraries(pingpongint /usr/local/lib/libnanomsg.a -pthread -lanl)
+add_executable(pushpullbm pushpull_bm.c)
+target_link_libraries(pushpullbm /usr/local/lib/libnanomsg.a -pthread -lanl)

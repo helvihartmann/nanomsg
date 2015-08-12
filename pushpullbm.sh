@@ -5,12 +5,12 @@ if [[ "$SLURMD_NODENAME" ]]; then
     readarray -t NODELIST < <(scontrol show hostname $SLURM_NODELIST)
     echo ${NODELIST[*]}
     if [ "$SLURM_PROCID" == 0 ]; then
-        ./build/pingpongint receive tcp://*:5555
+        ./build/pushpullbm receive tcp://*:5555
 
 
     elif [ "$SLURM_PROCID" == 1 ]; then
 #./build/pingpong send tcp://${NODELIST[0]}:5555 "Hello die Welt geht unter"
-        ./build/pingpongint send tcp://${NODELIST[0]}:5555 ""
+        ./build/pushpullbm send tcp://${NODELIST[0]}:5555 ""
 
     fi
 
