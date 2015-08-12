@@ -9,8 +9,8 @@
 #include <stdbool.h>
 #include <nanomsg/pair.h>
 #include <nanomsg/tcp.h>
-#include <time.h>
-//#include "/home/hartmann/src/nanomsg-0.6-beta/tests/testutil.h"
+#include <sys/time.h>
+#include <stdlib.h>
 
 #define RECEIVE "receive"
 #define SEND "send"
@@ -31,7 +31,7 @@ int checkbuf (const int *buf, int bytes){
 int receive (const char *url)
 {
     int sock0 = nn_socket (AF_SP, NN_PULL);
-    //int sock0 = test_socket (AF_SP, NN_PAIR);
+    //int sock0 = nn_socket (AF_SP, NN_PAIR);
     assert (sock0 >= 0);
     nn_bind (sock0, url);
     bool end = false;
@@ -51,17 +51,21 @@ int receive (const char *url)
     return 0;
 }
 
-int send (const char *url, const int *msg, size_t sz_msg)
+int send (const char *url, const int *msg, size_t sz_msg, size_t repeats)
 {
     int sock1 = nn_socket (AF_SP, NN_PUSH);
-    //int sock1 = test_socket (AF_SP, NN_PAIR);
-    assert (sock1 >= 0);
+    //int sock1 = nn_socket (AF_SP, NN_PAIR);
+    if (sock1 < 0){
+        printf("return code: %d\n", sock1);
+        printf ("nn_socket failed with error code %d\n", nn_errno ());
+        return 0;
+    }
     assert (nn_connect (sock1, url) >= 0);
 
-
-    //printf ("SENDING \"%d (%lu bytes)\"\n", *msg, sz_msg);
-
-    int bytes = nn_send (sock1, msg, sz_msg, 0);
+    int bytes = 0;
+    for (size_t i = 0; i < repeats; i++){
+        bytes = nn_send (sock1, msg, sz_msg, 0);
+    }
     assert (bytes == sz_msg);
     int ret = nn_shutdown (sock1, 1);//int how = 0 in original but returns error
     if (ret != 0){
@@ -73,9 +77,7 @@ int send (const char *url, const int *msg, size_t sz_msg)
 
 int main (const int argc, const char **argv)
 {
-    time_t now, end;
-    struct tm * timeinfo;
-    double seconds;
+    struct timeval start, end;
     
     if (strncmp (RECEIVE, argv[1], strlen (RECEIVE)) == 0 && argc > 1){
         //printf ("url %s \n",argv[2]);
@@ -84,7 +86,7 @@ int main (const int argc, const char **argv)
     else if (strncmp (SEND, argv[1], strlen (SEND)) == 0 && argc > 2){
         //printf("url %s\n",argv[2]);
         
-        int bufsize = 536870912;
+        size_t bufsize = 2147483648;
         int *mymsg;
         mymsg = (int *) malloc(sizeof(*mymsg) * bufsize);
         
@@ -93,29 +95,25 @@ int main (const int argc, const char **argv)
         }
         printf ("Created buff of size %lu Bytes; %lu ints of size %lu Bytes \"\n", bufsize, bufsize/sizeof(*mymsg), sizeof(*mymsg));
         
-        for (size_t sz_msg = 4; sz_msg < 1024*1024; sz_msg = sz_msg * 2){
+        size_t repeats = 2000000;
+        int factor = 2;
+        for (size_t sz_msg = 4; sz_msg <= 1024*1024*1024; sz_msg = sz_msg * factor){
+    
+            gettimeofday(&start, NULL);
+            send(argv[2], mymsg, sz_msg, repeats);
+            gettimeofday(&end, NULL);
             
-            time(&now);  /* get current time; same as: now = time(NULL)  */
-            timeinfo = localtime(&now);
-            printf ("%d seconds \n", timeinfo->tm_sec);
-            
-            for (size_t repeats = 0; repeats < 100; repeats++){
-                send(argv[2], mymsg, sz_msg);
+            float time = ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec));
+            printf("%lu %lu %lu %.3f %lf \n",repeats*sz_msg, repeats, sz_msg, time/1000000, sz_msg/time);
+            repeats = repeats/2;
+            if (sz_msg >= 1048576){
+                repeats = repeats/sz_msg;
             }
-            end = time(0);
-            timeinfo = localtime(&end);
-            
-            printf ("%d.\n", timeinfo->tm_sec);
-
-            
-            time(&end);
-            seconds = difftime(now,end);
-            
-            printf ("SENDING \"%lu bytes took %f seconds\"\n", sz_msg, seconds);
+            if (repeats == 0) repeats = 4;
         }
         
         mymsg[0] = 0;
-        send(argv[2], mymsg, 4);
+        send(argv[2], mymsg, 4, 1);
         free(mymsg);
         
         return 0;
