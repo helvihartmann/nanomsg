@@ -11,6 +11,9 @@
 #include <nanomsg/tcp.h>
 #include <sys/time.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include "parameters.h"
+
 #define RECEIVE "receive"
 #define SEND "send"
 
@@ -74,10 +77,10 @@ int send (const char *url, const int *msg, size_t sz_msg, size_t repeats)
     return ret;
 }
 
-int main (const int argc, const char **argv)
+int main (const int argc, char **argv)
 {
     struct timeval start, end;
-    //params(argc, argv);
+    Parameters params(argc, argv);
     if (strncmp (RECEIVE, argv[1], strlen (RECEIVE)) == 0 && argc > 1){
         //printf ("url %s \n",argv[2]);
         return receive(argv[2]);
@@ -85,7 +88,8 @@ int main (const int argc, const char **argv)
     else if (strncmp (SEND, argv[1], strlen (SEND)) == 0 && argc > 2){
         //printf("url %s\n",argv[2]);
         
-        size_t bufsize = 2147483648;
+        //size_t bufsize = 2147483648;
+        size_t bufsize = params.getbuffersize();
         int *mymsg;
         mymsg = (int *) malloc(sizeof(*mymsg) * bufsize);
         
@@ -94,9 +98,11 @@ int main (const int argc, const char **argv)
         }
         printf ("Created buff of size %lu Bytes; %lu ints of size %lu Bytes \"\n", bufsize, bufsize/sizeof(*mymsg), sizeof(*mymsg));
         
-        size_t repeats = 2000000;
+        //size_t repeats = 2000000;
+        size_t repeats = params.getrepeats();
+
         int factor = 2;
-        for (size_t sz_msg = 4; sz_msg <= 1024*1024*1024; sz_msg = sz_msg * factor){
+        for (size_t sz_msg = 4; sz_msg < 1024*1024*1024; sz_msg = sz_msg * factor){
     
             gettimeofday(&start, NULL);
             send(argv[2], mymsg, sz_msg, repeats);
@@ -108,7 +114,7 @@ int main (const int argc, const char **argv)
             if (sz_msg >= 1048576){
                 repeats = repeats/sz_msg;
             }
-            if (repeats == 0) repeats = 4;
+            if (repeats == 0) repeats = 2;
         }
         
         mymsg[0] = 0;
