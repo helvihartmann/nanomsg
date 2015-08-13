@@ -12,5 +12,5 @@ add_definitions(-std=c++11)
 add_executable(pushpullbm pushpull_bm.cpp parameters.cpp)
 target_link_libraries(pushpullbm /usr/local/lib/libnanomsg.a -pthread -lanl)
 
-add_executable(pubsubbm pubsub_bm.cpp)
+add_executable(pubsubbm pubsub_bm.cpp parameters.cpp)
 target_link_libraries(pubsubbm /usr/local/lib/libnanomsg.a -pthread -lanl)
