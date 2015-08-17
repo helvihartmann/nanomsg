@@ -24,10 +24,10 @@ Parameters::Parameters(int argc, char **argv){
         case 'h':
             std::cout << "------------------\nWelcome to this nanomsg Benchmark program\n you may choose the following options\n ---------------------" << std::endl;
             std::cout << "--help        -h       to view this help tutorial" << std::endl;
-            std::cout << "--buffersize  -b      buffsize (DEFAULT = " << buffersize << std::endl;
+            std::cout << "--buffersize  -b      buffsize (DEFAULT = " << buffersize << ")" << std::endl;
             std::cout << "--name        -n      name; enter any for your process to regonize " << std::endl;
-            std::cout << "--repeats     -r      repeats (DEFAULT = " << repeats << std::endl;
-            std::cout << "--type        -t      type: either choose server (0) or client (1) (DEFAULT = " << type << std::endl;
+            std::cout << "--repeats     -r      repeats (DEFAULT = " << repeats << ")" << std::endl;
+            std::cout << "--type        -t      type: either choose server (0) or client (1) (DEFAULT = " << type << ")" << std::endl;
             std::cout << "--url         -u      url; Always enter url for process to connect. Program won't run without a given url" << std::endl;
 
             exit(1);
