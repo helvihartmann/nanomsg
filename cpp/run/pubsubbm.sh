@@ -1,13 +1,13 @@
 #!/bin/bash
 
-end=4;
+end=8;
 
 if [[ "$SLURMD_NODENAME" ]]; then
 
     readarray -t NODELIST < <(scontrol show hostname $SLURM_NODELIST)
     if [ "$SLURM_PROCID" == 0 ]; then
         echo ${NODELIST[*]}
-        ./build/pubsubbm -u tcp://*:5555 -b 8589934592 -t server
+        ./../build/pubsubbm -u tcp://*:5555 -b 8589934592 -t server
     fi
 
     for ((n=1;n<$end;n++)); do
@@ -15,13 +15,13 @@ if [[ "$SLURMD_NODENAME" ]]; then
             name="client"$n
 
             echo "process " $n $name
-            ./build/pubsubbm -u tcp://${NODELIST[0]}:5555 -n $name -b 8589934592
+            ./../build/pubsubbm -u tcp://${NODELIST[0]}:5555 -n $name -b 8589934592
         fi
     done
 
 else
     #started directly--------------------------------------------------------------------------------------------------------------
-    srun -N 4 $0
+    srun -N $end $0
 fi
 
 exit 0

@@ -9,8 +9,8 @@ add_definitions(-std=c++11)
 
 #This tells CMake to do executable
 
-add_executable(pushpullbm pushpull_bm.cpp parameters.cpp)
+add_executable(pushpullbm src/pushpull_bm.cpp src/parameters.cpp)
 target_link_libraries(pushpullbm /usr/local/lib/libnanomsg.a -pthread -lanl)
 
-add_executable(pubsubbm pubsub_bm.cpp parameters.cpp)
+add_executable(pubsubbm src/pubsub_bm.cpp src/parameters.cpp)
 target_link_libraries(pubsubbm /usr/local/lib/libnanomsg.a -pthread -lanl)
