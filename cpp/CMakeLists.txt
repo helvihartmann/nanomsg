@@ -12,5 +12,8 @@ add_definitions(-std=c++11)
 add_executable(pushpullbm src/pushpull_bm.cpp src/parameters.cpp)
 target_link_libraries(pushpullbm /usr/local/lib/libnanomsg.a -pthread -lanl)
 
-add_executable(pubsubbm src/pubsub_bm.cpp src/parameters.cpp)
+add_executable(pubsubbm src/pubsub_bm.cpp src/parameters.cpp src/functions.cpp)
 target_link_libraries(pubsubbm /usr/local/lib/libnanomsg.a -pthread -lanl)
+
+add_executable(surveybm src/survey_bm.cpp src/parameters.cpp src/functions.cpp)
+target_link_libraries(surveybm /usr/local/lib/libnanomsg.a -pthread -lanl)

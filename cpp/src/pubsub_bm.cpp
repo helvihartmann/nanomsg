@@ -9,7 +9,9 @@
 #include <sys/time.h>
 
 
-
+int checkbuf (const int *buf, int bytes);
+void receive(int sock);
+void send(int sock, size_t buffsize);
 
 int pubserver (const char *url, Parameters *params)
 {
@@ -18,7 +20,8 @@ int pubserver (const char *url, Parameters *params)
     assert (sock >= 0);
     assert (nn_bind (sock, url) >= 0);
     
-    struct timeval start, end;
+    send(sock, params->getbuffersize());
+    /*struct timeval start, end;
     int factor = 2;
     size_t endsz_msg = 2<<30;
     size_t startsz_msg = 4;
@@ -52,19 +55,7 @@ int pubserver (const char *url, Parameters *params)
     mymsg[0] = 0;
     nn_send (sock, mymsg, 4, 0);
     return nn_shutdown(sock, 0);
-    free(mymsg);
-}
-
-int checkbuf (const int *buf, int bytes){
-    int j = 0;
-    int sum = 0;
-    for ( int i = 0; i < bytes/4; i++){
-        j = buf[i];
-        //printf ("%d", j);
-        sum = sum + j;
-    }
-    //printf ("\n");
-    return sum/(bytes/sizeof(int));
+    free(mymsg);*/
 }
 
 int subclient (const char *url, const char *name)
@@ -74,21 +65,8 @@ int subclient (const char *url, const char *name)
     // TODO learn more about publishing/subscribe keys
     assert (nn_setsockopt (sock, NN_SUB, NN_SUB_SUBSCRIBE, "", 0) >= 0);
     assert (nn_connect (sock, url) >= 0);
-    bool end = false;
-    int bytes = 0;
-    int checksum = 0;
-    while (!end)
-    {
-        int *buf = NULL;
-        bytes = nn_recv (sock, &buf, NN_MSG, 0);
-        checksum = checkbuf(buf, bytes);
-        if (checksum != 1){
-            end = true;
-            if (checksum != 0) printf ("ERROR occured, received wrong numbers, checksum = %d\n", checksum);
-        }
-        nn_freemsg (buf);
-    }
-    return nn_shutdown (sock, 0);
+    
+    receive(sock);
 }
 
 int main (const int argc, char **argv){
