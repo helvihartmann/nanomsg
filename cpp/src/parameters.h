@@ -4,6 +4,7 @@
 #include <getopt.h>
 #include <iostream>
 #include <string.h>
+#include <vector>
 
 #define SERVER "server"
 #define CLIENT "client"
@@ -18,6 +19,9 @@ private:
     Type type;
     const char *url;
     const char *name;
+    size_t sz_start, sz_end;
+    int sz_factor;
+    std::vector<size_t> messagesizes;
 public:
     
     Parameters(int argc, char **argv);
@@ -31,6 +35,8 @@ public:
     const char * geturl() { return url; }
     
     const char *getname() { return name; }
+    
+    std::vector<size_t> getmessagesizes() { return messagesizes; }
 
 };
 

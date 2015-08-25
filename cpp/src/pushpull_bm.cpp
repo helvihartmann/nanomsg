@@ -30,19 +30,21 @@ int checkbuf (const int *buf, int bytes){
     return sum/(bytes/sizeof(int));
 }
 
-int receive (const char *url)
-{
+int receive (const char *url){
     int sock0 = nn_socket (AF_SP, NN_PULL);
     //int sock0 = nn_socket (AF_SP, NN_PAIR);
     assert (sock0 >= 0);
     nn_bind (sock0, url);
+    
+    int bytes = 0;
+    int checksum = 0;
     bool end = false;
     while (!end){
 
         int *buf = NULL;
-        int bytes = nn_recv (sock0, &buf, NN_MSG, 0);
+        bytes = nn_recv (sock0, &buf, NN_MSG, 0);
 
-        int checksum = checkbuf(buf, bytes);
+        checksum = checkbuf(buf, bytes);
         if (checksum != 1){
             end = true;
             if (checksum != 0) printf ("ERROR occured, received wrong numbers, checksum = %d\n", checksum);
@@ -81,7 +83,57 @@ int main (const int argc, char **argv)
 {
     struct timeval start, end;
     Parameters params(argc, argv);
-    if (strncmp (RECEIVE, argv[1], strlen (RECEIVE)) == 0 && argc > 1){
+    const char *url = params.geturl();
+    Type type = params.gettype();
+
+    switch (type) {
+        case server:{
+            receive(url);
+            break;
+        }
+        case client:{
+            size_t bufsize = params.getbuffersize();
+            int *mymsg;
+            mymsg = (int *) malloc(sizeof(*mymsg) * bufsize);
+            
+            for (int i = 0; i < bufsize; i++){
+                mymsg[i] = 1;
+            }
+            printf ("Created buff of size %lu Bytes; %lu ints of size %lu Bytes \"\n", bufsize, bufsize/sizeof(*mymsg), sizeof(*mymsg));
+            
+            //size_t repeats = 2000000;
+            size_t repeatsfix = params.getrepeats();
+            size_t repeats = 0;
+            int factor = 2;
+            for (size_t sz_msg = 4; sz_msg < 1024*1024*1024; sz_msg = sz_msg * factor){
+                repeats = (repeatsfix*100)/sz_msg;
+                /*if (sz_msg >= 1048576){
+                    repeats = (repeatsfix*10000)/sz_msg;
+                }*/
+                if (repeats <= 1) repeats = 2;
+                
+                gettimeofday(&start, NULL);
+                send(url, mymsg, sz_msg, repeats);
+                gettimeofday(&end, NULL);
+                
+                float time = ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec));
+                //printf("%lu %lu %lu %.3f %lf \n",repeats*sz_msg, repeats, sz_msg, time/1000000, sz_msg/time);
+                std::cout << repeats*sz_msg << " " << repeats << " " << sz_msg << " " << time/1000000 << " " << (repeats*sz_msg)/time << std::endl;
+            }
+            
+            mymsg[0] = 0;
+            send(url, mymsg, 4, 1);
+            free(mymsg);
+            break;
+        }
+        default:
+            fprintf (stderr, "Usage: pubsub %s|%s <URL> <ARG> ...\n",
+                     SERVER, CLIENT);
+            return 1;
+            break;
+    }
+    
+    /*if (strncmp (RECEIVE, argv[1], strlen (RECEIVE)) == 0 && argc > 1){
         //printf ("url %s \n",argv[2]);
         return receive(argv[2]);
     }
@@ -128,5 +180,5 @@ int main (const int argc, char **argv)
       fprintf (stderr, "Usage: pipeline %s|%s <URL> <ARG> ...'\n",
                RECEIVE, SEND);
       return 1;
-    }
+    }*/
 }

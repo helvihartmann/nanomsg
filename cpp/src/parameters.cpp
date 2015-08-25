@@ -1,9 +1,11 @@
 #include "parameters.h"
 
 Parameters::Parameters(int argc, char **argv){
+    sz_start = 4;
+    buffersize = 8589934592; //1073741824; //2147483648;
+    sz_factor = 2;
     int opt;
-    buffersize = 2147483648;
-    repeats = 2000000;
+    repeats = 200000;//2000000 good number for pushpull
     type = client;
     url = "";
     name = "";
@@ -71,4 +73,16 @@ Parameters::Parameters(int argc, char **argv){
         std::cout << "ERROR: -u please enter valid url" << std::endl;
     }
     std::cout << "#type " << type << " " << name << " url " << url << "  buffer size " << buffersize << " repeats " << repeats << std::endl;
+    
+    sz_end = buffersize;
+    if (sz_start <= sz_end){
+        for (size_t p = sz_start; p <= sz_end; p = p * sz_factor){
+            messagesizes.push_back(p);
+        }
+    }
+    else{
+        for (size_t p = sz_start; p >= sz_end; p = p/sz_factor){
+            messagesizes.push_back(p);
+        }
+    }
 }
