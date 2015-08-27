@@ -8,10 +8,11 @@
 
 #define SERVER "server"
 #define CLIENT "client"
+#define IDLER "idler"
 /*2015 Copyright Helvi Hartmann <hhartmann@fias.uni-frankfurt.de>
  Parameter class takes in all options parsed in function call or sets default values*/
 
-enum Type{server, client};
+enum Type{server, client, idler};
 class Parameters{
 private:
     size_t buffersize;

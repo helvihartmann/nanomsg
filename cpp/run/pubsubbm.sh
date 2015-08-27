@@ -1,6 +1,6 @@
 #!/bin/bash
 
-end=8;
+end=2;
 
 if [[ "$SLURMD_NODENAME" ]]; then
 

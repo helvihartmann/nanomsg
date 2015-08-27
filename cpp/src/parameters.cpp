@@ -2,10 +2,10 @@
 
 Parameters::Parameters(int argc, char **argv){
     sz_start = 4;
-    buffersize = 8589934592; //1073741824; //2147483648;
+    buffersize = 2147483648; //8589934592; //1073741824; //2147483648;
     sz_factor = 2;
     int opt;
-    repeats = 200000;//2000000 good number for pushpull
+    repeats = 1000000;//2000000 good number for pushpull
     type = client;
     url = "";
     name = "";
@@ -53,6 +53,7 @@ Parameters::Parameters(int argc, char **argv){
         case 't':
             if (strncmp (SERVER, optarg, strlen (SERVER)) == 0) type = server;
             else if (strncmp (CLIENT, optarg, strlen (CLIENT)) == 0) type = client;
+            else if (strncmp (IDLER, optarg, strlen (IDLER)) == 0) type = idler;
             else {
                 printf("ERROR -t: please enter vaild type: either server or client \n");
                 exit(1);

@@ -8,6 +8,22 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <cassert>
+#include <ctime>
+#include <chrono>
+
+using namespace std;
+using namespace std::chrono;
+
+int* createbuf(size_t bufsize){
+    int *mymsg;
+    mymsg = (int *) malloc(sizeof(*mymsg) * bufsize);
+    
+    for (int i = 0; i < bufsize; i++){
+        mymsg[i] = 1;
+    }
+    cout << "Created buff of size " << bufsize << " Bytes" << endl;
+    return mymsg;
+}
 
 int checkbuf (const int *buf, int bytes){
     int j = 0;
@@ -42,7 +58,7 @@ void receive(int sock){
 
         if (checksum != 1){
             end = true;
-            if (checksum != 0) printf ("ERROR occured, received wrong numbers, checksum = %d\n", checksum);
+            if (checksum != 0) cout << "ERROR occured, received wrong numbers, checksum = " << checksum << endl;
         }
         nn_freemsg (buf);
     }
@@ -53,17 +69,10 @@ void send(int sock, size_t bufsize, size_t repeatsfix){
     
     int bytes = 0;
     size_t repeats = 0;
-    struct timeval start, end;
     int factor = 2;
     size_t endsz_msg = 2<<26;
     size_t startsz_msg = 4;
-    int *mymsg;
-    mymsg = (int *) malloc(sizeof(*mymsg) * bufsize);
-    
-    for (int i = 0; i < bufsize; i++){
-        mymsg[i] = 1;
-    }
-    std::cout << "Created buff of size " << bufsize << " Bytes" << std::endl;
+    int *mymsg = createbuf(bufsize);
     
     for (size_t sz_msg = startsz_msg; sz_msg < endsz_msg; sz_msg = sz_msg * factor){
         
@@ -74,17 +83,15 @@ void send(int sock, size_t bufsize, size_t repeatsfix){
         }
         if (repeats == 0) repeats = 5;
         
-        gettimeofday(&start, NULL);
+        high_resolution_clock::time_point t1 = high_resolution_clock::now();
         for(int i = 0; i < repeats; i++){
             bytes = nn_send (sock, mymsg, sz_msg, 0);
             //sleep(1);
         }
-        gettimeofday(&end, NULL);
-        
-        float time = ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec));
-        std::cout << repeats*sz_msg << " " << repeats << " " << sz_msg << " " << time/1000000 << " " << (repeats*sz_msg)/time << std::endl;
-        
-
+        high_resolution_clock::time_point t2 = high_resolution_clock::now();
+        duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
+        double time = time_span.count();
+        cout << sz_msg*repeats << " " << repeats << " " << sz_msg << " " << time << " " << (sz_msg*repeats)/(time*1000000) << endl;
     }
     
     mymsg[0] = 0;
