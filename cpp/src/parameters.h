@@ -23,6 +23,7 @@ private:
     size_t sz_start, sz_end;
     int sz_factor;
     std::vector<size_t> messagesizes;
+    int nmbrsubs;
 public:
     
     Parameters(int argc, char **argv);
@@ -38,6 +39,8 @@ public:
     const char *getname() { return name; }
     
     std::vector<size_t> getmessagesizes() { return messagesizes; }
+    
+    int getnmbrsubs() { return nmbrsubs; }
 
 };
 

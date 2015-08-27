@@ -13,66 +13,54 @@
 #include <sys/time.h>
 #include <errno.h>
 
+using namespace std;
 int checkbuf (const int *buf, int bytes);
 void receive(int sock);
 void send(int sock, size_t buffsize, size_t repeats);
-
+int* createbuf(size_t bufsize);
 
 void syncservice_client(const char *url){
     
-    int bytes = 0;
-    int sock = nn_socket (AF_SP, NN_PULL);
+    int sock1 = nn_socket (AF_SP, NN_REQ);
+    if (sock1 < 0) std::cout << "nn_socket failed with error code " << nn_errno () << std::endl;
+    int connect = nn_connect (sock1, "tcp://node0:6666");
+    if (connect < 0) cout << "nn_connect failed with error code " << nn_strerror(nn_errno()) << " tcp://*:6666" << endl;
     
-    if (sock < 0){
-        std::cout << "return code: " << sock << std::endl;
-        std::cout << "nn_socket failed with error code " << nn_errno () << std::endl;
-    }
-    
-    int bind = nn_bind (sock, "tcp://*:6666");
-    
-    if (bind < 0) std::cout << "nn_bind failed with error code " << nn_strerror(nn_errno()) << " tcp://node0:6666" << std::endl;
+    int msg = 1024;
+    int bytes = nn_send (sock1, &msg, sizeof(int), 0);
     
     int *buf = NULL;
-    bytes = nn_recv (sock, &buf, NN_MSG, 1);
+    bytes = nn_recv (sock1, &buf, NN_MSG, 0);
     nn_freemsg (buf);
-    
-    //int msg = 1024;
-    //bytes = nn_send (sock, &msg, sizeof(int), 1);
-    
-    nn_shutdown (sock, 1);
-}
 
+    int ret = nn_shutdown (sock1, 1);//int how = 0 in original but returns error
+    if (ret != 0) cout << "nn_shutdwon failed with error code " << nn_strerror(nn_errno());
+}
 
 void syncservice_server(const char *url, int nmbrofsubscribers){
-    
-    int bytes = 0;
-    int sock = nn_socket (AF_SP, NN_PUSH);
-    
-    if (sock < 0){
-        std::cout << "return code: " << sock << std::endl;
-        std::cout << "nn_socket failed with error code " << nn_errno () << std::endl;
-    }
-    
-    int connect = nn_connect (sock, "tcp://node0:6666");
-    
-    if (connect < 0) std::cout << "nn_connect failed with error code " << nn_strerror(nn_errno()) << " tcp://*:6666" << std::endl;
-
-    
-    int subscribers = 1;
+    int subscribers = 0;
     while (subscribers < nmbrofsubscribers) {
+        int sock0 = nn_socket (AF_SP, NN_REP);
+        if (sock0 < 0) cout << "nn_socket failed with error code " << nn_errno () << endl;
+        int bind = nn_bind (sock0, "tcp://*:6666");
+        if (bind < 0) cout << "nn_bind failed with error code " << nn_strerror(nn_errno()) << " tcp://node0:6666" << endl;
+
+        int *buf = NULL;
+        int bytes = nn_recv (sock0, &buf, NN_MSG, 0);
+        nn_freemsg (buf);
+        cout << "CLIENT: received request" << endl;
         
         int msg = 1024;
-        bytes = nn_send (sock, &msg, sizeof(int), 1);
+        bytes = nn_send (sock0, &msg, sizeof(int), 0);
+        if(bytes < 0) cout << "SERVER: ERROR replying, " << nn_strerror(nn_errno()) << endl;
+        cout << "CLIENT: replied" << endl;
+
+        int ret = nn_shutdown (sock0, 1);//int how = 0 in original but returns error
+        if (ret != 0) cout << "nn_shutdwon failed with error code " << nn_strerror(nn_errno());
         
-        /*int *buf = NULL;
-        bytes = nn_recv (sock, &buf, NN_MSG, 1);
-        nn_freemsg (buf);*/
         subscribers++;
     }
-    
-    nn_shutdown (sock, 1);
 }
-
 
 
 int pubserver (const char *url, Parameters *params){
@@ -82,8 +70,8 @@ int pubserver (const char *url, Parameters *params){
     assert (nn_bind (sock, url) >= 0);
     
     std::cout << "nn_bind succesfull " << url << std::endl;*/
-    syncservice_server(url, 3);
-    //syncservice_server(params->getnmbrofsubscribers());
+    //syncservice_server(url, 2);
+    syncservice_server(url, params->getnmbrsubs());
     //send(sock, params->getbuffersize(), params->getrepeats());
 }
 

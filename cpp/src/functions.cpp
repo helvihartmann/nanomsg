@@ -10,6 +10,7 @@
 #include <cassert>
 #include <ctime>
 #include <chrono>
+#include <stdlib.h>
 
 using namespace std;
 using namespace std::chrono;
@@ -19,7 +20,7 @@ int* createbuf(size_t bufsize){
     mymsg = (int *) malloc(sizeof(*mymsg) * bufsize);
     
     for (int i = 0; i < bufsize; i++){
-        mymsg[i] = 1;
+        mymsg[i] = rand();
     }
     cout << "Created buff of size " << bufsize << " Bytes" << endl;
     return mymsg;

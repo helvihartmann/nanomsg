@@ -9,18 +9,20 @@ Parameters::Parameters(int argc, char **argv){
     type = client;
     url = "";
     name = "";
+    nmbrsubs = 2;
     //-------------------------------------------------------------------------------------------
     
     static struct option longopts[] = {
         { "help",             no_argument,             NULL,	     'h' },
-        { "buffersize",      required_argument,        NULL,       'b' },
+        { "buffersize",       required_argument,        NULL,       'b' },
         { "repeats",          required_argument,        NULL,       'r' },
+        { "subscribers",       required_argument,        NULL,       's' },
         { "type",             required_argument,        NULL,       't' },
         { "url",              required_argument,        NULL,       'u' },
         { NULL,	     0,			     NULL,	     0 }
     };
     
-    while ((opt = getopt_long (argc, argv, "hb:n:r:t:u:", longopts, NULL)) != -1)
+    while ((opt = getopt_long (argc, argv, "hb:n:r:s:t:u:", longopts, NULL)) != -1)
         switch (opt)
     {
         case 'h':
@@ -29,6 +31,7 @@ Parameters::Parameters(int argc, char **argv){
             std::cout << "--buffersize  -b      buffsize (DEFAULT = " << buffersize << ")" << std::endl;
             std::cout << "--name        -n      name; enter any for your process to regonize " << std::endl;
             std::cout << "--repeats     -r      repeats (DEFAULT = " << repeats << ")" << std::endl;
+            std::cout << "--subscribers -s      number of subscribers (DEFAULT = " << nmbrsubs << ")" << std::endl;
             std::cout << "--type        -t      type: either choose server (0) or client (1) (DEFAULT = " << type << ")" << std::endl;
             std::cout << "--url         -u      url; Always enter url for process to connect. Program won't run without a given url" << std::endl;
 
@@ -47,6 +50,13 @@ Parameters::Parameters(int argc, char **argv){
             repeats = atof(optarg);
             if (!(repeats >= 0)) {
                 printf("ERROR -r: please enter vaild number for repeats \n");
+                exit(1);
+            }
+            break;
+        case 's':
+            nmbrsubs = atoi(optarg);
+            if (!(repeats >= 0)) {
+                printf("ERROR -s: please enter vaild number for subscribers \n");
                 exit(1);
             }
             break;
