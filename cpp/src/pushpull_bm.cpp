@@ -23,28 +23,14 @@
 using namespace std;
 using namespace std::chrono;
 
-int checkbuf (const int *buf, int bytes){
-    int j = 0;
-    int sum = 0;
-    for ( int i = 0; i < bytes/4; i++){
-        j = buf[i];
-        //printf ("%d", j);
-        sum = sum + j;
-    }
-    //printf ("\n");
-    
-    return sum/(bytes/sizeof(int));
-}
+
+int checkbuf (const int *buf, int bytes);
+int* createbuf(size_t bufsize);
 
 int send (const char *url, const int *msg, size_t sz_msg, size_t repeats)
 {
     int sock1 = nn_socket (AF_SP, NN_PUSH);
-    //int sock1 = nn_socket (AF_SP, NN_PAIR);
-    if (sock1 < 0){
-        printf("return code: %d\n", sock1);
-        printf ("nn_socket failed with error code %d\n", nn_errno ());
-        return 0;
-    }
+    if (sock1 < 0)cout << "nn_socket failed with error code " << nn_strerror(nn_errno());
     assert (nn_connect (sock1, url) >= 0);
     
     int bytes = 0;
@@ -53,27 +39,17 @@ int send (const char *url, const int *msg, size_t sz_msg, size_t repeats)
     }
     assert (bytes == sz_msg);
     int ret = nn_shutdown (sock1, 1);//int how = 0 in original but returns error
-    if (ret != 0){
-        printf("return code: %d\n", ret);
-        printf ("nn_shutdwon failed with error code %d\n", nn_errno ());
-    }
+    if (ret != 0) cout << "nn_shutdwon failed with error code " << nn_strerror(nn_errno());
+
     return ret;
 }
 
 int setupbm(const char *url, size_t bufsize, size_t repeatsfix, vector<size_t>messagsizes){
 
-    int *mymsg;
-    mymsg = (int *) malloc(sizeof(*mymsg) * bufsize);
-    
-    for (int i = 0; i < bufsize; i++){
-        mymsg[i] = 1;
-    }
-    cout << "Created buff of size " << bufsize << " Bytes; " << bufsize/sizeof(*mymsg) << " ints of size " << sizeof(*mymsg) << " Bytes " << endl;
-    
+    int *mymsg = createbuf(bufsize);
     size_t repeats = repeatsfix;
     int factor = 2;
     for (size_t sz_msg = messagsizes.front(); sz_msg < messagsizes.back(); sz_msg = sz_msg * factor){
-        //repeats = (repeatsfix*100)/sz_msg;
         if (sz_msg >= 8192){
             repeats = (repeatsfix*1000)/sz_msg;
          }
