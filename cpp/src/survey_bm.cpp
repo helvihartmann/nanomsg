@@ -7,6 +7,7 @@
 #include <nanomsg/nn.h>
 #include <nanomsg/survey.h>
 #include "parameters.h"
+#include "socketmng.h"
 #include <ctime>
 #include <chrono>
 #include <ratio>
@@ -50,14 +51,8 @@ int collectsurvey(int sock){
 }
 
 
-int surveyor(const char *url, vector<size_t> messagesizes){
-    int sock = nn_socket (AF_SP, NN_SURVEYOR);
-    assert (sock >= 0);
-    int timeout = 2000;
-    int sockopt = nn_setsockopt (sock, NN_SURVEYOR, NN_SURVEYOR_DEADLINE, &timeout, sizeof(timeout));
-    assert(sockopt >= 0);
-
-    assert (nn_bind (sock, url) >= 0);
+void surveyor(const char *url, vector<size_t> messagesizes, Socketmng *socketmng){
+    int sock = socketmng->open(url, survey, bind);
     sleep(1); // wait for connections
     
     int bytes = 0;
@@ -94,18 +89,14 @@ int surveyor(const char *url, vector<size_t> messagesizes){
     test[0] = 1;
     bytes = nn_send(sock, test, sizeof(size_t), 0);
     cout << bytes << endl;
-    return nn_shutdown (sock, 0);
-    cout << bytes << endl;
-
+    socketmng->close(sock);
 }
 
-int respondent (const char *url, const char *name, size_t bufsize){
+void respondent (const char *url, const char *name, size_t bufsize, Socketmng *socketmng){
+    
+    int sock = socketmng->open(url, respond, connect);
     
     int bytes = 0;
-    int sock = nn_socket (AF_SP, NN_RESPONDENT);
-    assert (sock >= 0);
-    assert (nn_connect (sock, url) >= 0);
-    
     int *mymsg = createbuf(bufsize);
     
     while(1){
@@ -122,39 +113,38 @@ int respondent (const char *url, const char *name, size_t bufsize){
         }
     }
     cout << "CLIENT " << name << " terminating" << endl;
-    return nn_shutdown (sock, 0);
+    socketmng->close(sock);
 }
 
-int idle (const char *url, const char *name){
+void idle (const char *url, const char *name, Socketmng *socketmng){
     
+    int sock = socketmng->open(url, respond, connect);
+
     int bytes = 0;
-    int sock = nn_socket (AF_SP, NN_RESPONDENT);
-    assert (sock >= 0);
-    assert (nn_connect (sock, url) >= 0);
-    
     while(1){
         size_t *buf = NULL;
         bytes = nn_recv (sock, &buf, NN_MSG, 0);
         if(buf[0] == 1) break;
     }
     cout << "IDLER " << name << " terminating" << endl;
-    return nn_shutdown (sock, 0);
+    socketmng->close(sock);
 }
 
 int main (const int argc, char **argv)
 {
     Parameters params(argc, argv);
+    Socketmng socketmng;
     Type type = params.gettype();
     const char *url = params.geturl();
     switch (type) {
         case server:
-            surveyor(url, params.getmessagesizes());
+            surveyor(url, params.getmessagesizes(), &socketmng);
             break;
         case client:
-            respondent (url, params.getname(), params.getbuffersize());
+            respondent (url, params.getname(), params.getbuffersize(), &socketmng);
             break;
         case idler:
-            idle (url, params.getname());
+            idle (url, params.getname(), &socketmng);
             break;
 
         default:

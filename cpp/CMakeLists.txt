@@ -9,11 +9,17 @@ add_definitions(-std=c++11)
 
 #This tells CMake to do executable
 
-add_executable(pushpullbm src/pushpull_bm.cpp src/parameters.cpp src/functions.cpp)
+add_executable(pushpullbm src/pushpull_bm.cpp src/parameters.cpp src/functions.cpp src/socketmng.cpp)
 target_link_libraries(pushpullbm /usr/local/lib/libnanomsg.a -pthread -lanl)
 
-add_executable(pubsubbm src/pubsub_bm.cpp src/parameters.cpp src/functions.cpp)
+add_executable(pushpullbmts src/pushpull-bm-ts.cpp src/parameters.cpp src/functions.cpp src/socketmng.cpp)
+target_link_libraries(pushpullbmts /usr/local/lib/libnanomsg.a -pthread -lanl)
+
+add_executable(reqrepbm src/reqrep_bm.cpp src/parameters.cpp src/functions.cpp src/socketmng.cpp)
+target_link_libraries(reqrepbm /usr/local/lib/libnanomsg.a -pthread -lanl)
+
+add_executable(pubsubbm src/pubsub_bm.cpp src/parameters.cpp src/functions.cpp src/socketmng.cpp)
 target_link_libraries(pubsubbm /usr/local/lib/libnanomsg.a -pthread -lanl)
 
-add_executable(surveybm src/survey_bm.cpp src/parameters.cpp src/functions.cpp)
+add_executable(surveybm src/survey_bm.cpp src/parameters.cpp src/functions.cpp src/socketmng.cpp)
 target_link_libraries(surveybm /usr/local/lib/libnanomsg.a -pthread -lanl)

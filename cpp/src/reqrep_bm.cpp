@@ -5,9 +5,8 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <nanomsg/nn.h>
-#include <nanomsg/pipeline.h>
+#include <nanomsg/reqrep.h>
 #include <stdbool.h>
-#include <nanomsg/pair.h>
 #include <nanomsg/tcp.h>
 #include <sys/time.h>
 #include <stdlib.h>
@@ -25,15 +24,13 @@
 using namespace std;
 using namespace std::chrono;
 
+
 int checkbuf (const int *buf, int bytes);
 int* createbuf(size_t bufsize);
-int close (int sock);
-int open(const char *url, const char *socktype);
 
 void send(const char *url, size_t bufsize, size_t repeatsfix, vector<size_t>messagsizes, Socketmng *sockets){
 
-    int sock1 = sockets->open(url, push, connect);
-
+    int sock1 = sockets->open(url, req, connect);
 
     int *mymsg = createbuf(bufsize);
     size_t repeats = repeatsfix;
@@ -50,6 +47,8 @@ void send(const char *url, size_t bufsize, size_t repeatsfix, vector<size_t>mess
         for (size_t i = 0; i < repeats; i++){
             index = (sz_msg*repeats)%bufsize;
             bytes = nn_send (sock1, (mymsg+index), sz_msg, 0);
+            int *buf = NULL;
+            bytes = nn_recv (sock1, &buf, NN_MSG, 0);
         }
         high_resolution_clock::time_point t2 = high_resolution_clock::now();
         
@@ -68,7 +67,7 @@ void send(const char *url, size_t bufsize, size_t repeatsfix, vector<size_t>mess
 
 void receive (const char *url, Socketmng *sockets){
     
-    int sock0 = sockets->open(url, pull, bind);
+    int sock0 = sockets->open(url, rep, bind);
     
     int bytes = 0;
     int checksum = 0;
@@ -77,7 +76,7 @@ void receive (const char *url, Socketmng *sockets){
 
         int *buf = NULL;
         bytes = nn_recv (sock0, &buf, NN_MSG, 0);
-        
+        bytes = nn_send(sock0, buf, bytes, 0);
         if(buf[0] == 0) end = true;
         /*checksum = checkbuf(buf, bytes);
         if (checksum != 1){

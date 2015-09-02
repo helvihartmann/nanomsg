@@ -20,7 +20,7 @@ int* createbuf(size_t bufsize){
     mymsg = (int *) malloc(sizeof(*mymsg) * bufsize);
     
     for (int i = 0; i < bufsize; i++){
-        mymsg[i] = rand();
+        mymsg[i] = 1; //rand();
     }
     cout << "Created buff of size " << bufsize << " Bytes" << endl;
     return mymsg;
@@ -49,14 +49,23 @@ char *date ()
 
 void receive(int sock){
     int bytes = 0;
+    int bytesprev = 0;
     int checksum = 0;
     bool end = false;
+    int nmbrmessages = 0;
     while (!end){
 
         int *buf = NULL;
         bytes = nn_recv (sock, &buf, NN_MSG, 0);
         checksum = checkbuf(buf, bytes);
-
+        
+        nmbrmessages++;
+        if(bytesprev != bytes){
+            cout << "CLIENT: received " << nmbrmessages << " messages of size " << bytes << endl;
+            nmbrmessages = 0;
+        }
+        
+        bytesprev = bytes;
         if (checksum != 1){
             end = true;
             if (checksum != 0) cout << "ERROR occured, received wrong numbers, checksum = " << checksum << endl;
@@ -76,7 +85,7 @@ void send(int sock, size_t bufsize, size_t repeatsfix){
     int *mymsg = createbuf(bufsize);
     
     for (size_t sz_msg = startsz_msg; sz_msg < endsz_msg; sz_msg = sz_msg * factor){
-        
+        sleep(1);
         //repeats = repeats/2;
         repeats = repeatsfix;
         if (sz_msg >= 262144){ //1048576
@@ -87,6 +96,7 @@ void send(int sock, size_t bufsize, size_t repeatsfix){
         high_resolution_clock::time_point t1 = high_resolution_clock::now();
         for(int i = 0; i < repeats; i++){
             bytes = nn_send (sock, mymsg, sz_msg, 0);
+            assert(bytes >= 0);
             //sleep(1);
         }
         high_resolution_clock::time_point t2 = high_resolution_clock::now();

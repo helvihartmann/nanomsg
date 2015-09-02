@@ -10,8 +10,11 @@
 #include <nanomsg/pair.h>
 #include <nanomsg/tcp.h>
 #include "parameters.h"
+#include "socketmng.h"
 #include <sys/time.h>
 #include <errno.h>
+#include <vector>
+#include <limits>
 
 using namespace std;
 int checkbuf (const int *buf, int bytes);
@@ -19,13 +22,21 @@ void receive(int sock);
 void send(int sock, size_t buffsize, size_t repeats);
 int* createbuf(size_t bufsize);
 
-void syncservice_client(const char *url){
+
+string createurl(const char* plainurl, string port, string name){
+    string url = plainurl + port + name;
+    cout << url << endl;
+
+    return url;
+}
+
+int syncservice_client(const char *url, Socketmng *socketmng){
     
-    int sock1 = nn_socket (AF_SP, NN_REQ);
-    if (sock1 < 0) std::cout << "nn_socket failed with error code " << nn_errno () << std::endl;
-    int connect = nn_connect (sock1, "tcp://node0:6666");
-    if (connect < 0) cout << "nn_connect failed with error code " << nn_strerror(nn_errno()) << " tcp://*:6666" << endl;
-    
+    sleep(1);
+    int sock1 = socketmng->open(url, req, connect);
+     
+    cout << "CLIENT: sending request" << endl;
+
     int msg = 1024;
     int bytes = nn_send (sock1, &msg, sizeof(int), 0);
     
@@ -33,73 +44,73 @@ void syncservice_client(const char *url){
     bytes = nn_recv (sock1, &buf, NN_MSG, 0);
     nn_freemsg (buf);
 
-    int ret = nn_shutdown (sock1, 1);//int how = 0 in original but returns error
-    if (ret != 0) cout << "nn_shutdwon failed with error code " << nn_strerror(nn_errno());
+    return sock1;
 }
 
-void syncservice_server(const char *url, int nmbrofsubscribers){
+vector<int> syncservice_server(vector<string> urls, int nmbrofsubscribers, Socketmng *socketmng){
     int subscribers = 0;
+    vector<int>sockets;
     while (subscribers < nmbrofsubscribers) {
-        int sock0 = nn_socket (AF_SP, NN_REP);
-        if (sock0 < 0) cout << "nn_socket failed with error code " << nn_errno () << endl;
-        int bind = nn_bind (sock0, "tcp://*:6666");
-        if (bind < 0) cout << "nn_bind failed with error code " << nn_strerror(nn_errno()) << " tcp://node0:6666" << endl;
+        const char* url = urls.at(subscribers).c_str();
+        int sock1 = socketmng->open(url, rep, bind);
+        
+        cout << "SERVER: waiting for request" << endl;
 
         int *buf = NULL;
-        int bytes = nn_recv (sock0, &buf, NN_MSG, 0);
+        int bytes = nn_recv (sock1, &buf, NN_MSG, 0);
         nn_freemsg (buf);
-        cout << "CLIENT: received request" << endl;
+        cout << "SERVER: received request" << endl;
         
         int msg = 1024;
-        bytes = nn_send (sock0, &msg, sizeof(int), 0);
+        bytes = nn_send (sock1, &msg, sizeof(int), 0);
         if(bytes < 0) cout << "SERVER: ERROR replying, " << nn_strerror(nn_errno()) << endl;
-        cout << "CLIENT: replied" << endl;
+        cout << "SERVER: replied" << endl;
 
-        int ret = nn_shutdown (sock0, 1);//int how = 0 in original but returns error
-        if (ret != 0) cout << "nn_shutdwon failed with error code " << nn_strerror(nn_errno());
-        
         subscribers++;
+        sockets.push_back(sock1);
+    }
+    return sockets;
+}
+
+
+int pubserver (const char *plainurl, Parameters *params, Socketmng *socketmng){
+    
+    int sock0 = socketmng->open(createurl(plainurl, ":555", "5").c_str(), pub, bind);
+    
+    int bytes = 0;
+    vector<string>urls;
+    for (int i = 0; i < params->getnmbrsubs(); i++){
+        urls.push_back(createurl(plainurl, ":666", to_string(i)));
+    }
+    vector<int> sockets = syncservice_server(urls, params->getnmbrsubs(), socketmng);
+    send(sock0, params->getbuffersize(), params->getrepeats());
+    
+    for (int i = 0; i < sockets.size(); i++){
+        socketmng->close(sockets.at(i));
     }
 }
 
-
-int pubserver (const char *url, Parameters *params){
-    /*int bytes = 0;
-    int sock = nn_socket (AF_SP, NN_PUB);
-    assert (sock >= 0);
-    assert (nn_bind (sock, url) >= 0);
+int subclient (const char *plainurl, const char *name, Socketmng *socketmng){
+    int sock0 = socketmng->open(createurl(plainurl, ":555", "5").c_str(), sub, connect);
+    int sock1 = syncservice_client(createurl(plainurl, ":666", name).c_str(), socketmng);
+    receive(sock0);
     
-    std::cout << "nn_bind succesfull " << url << std::endl;*/
-    //syncservice_server(url, 2);
-    syncservice_server(url, params->getnmbrsubs());
-    //send(sock, params->getbuffersize(), params->getrepeats());
-}
-
-int subclient (const char *url, const char *name){
-    /*int sock = nn_socket (AF_SP, NN_SUB);
-    assert (sock >= 0);
-    
-    
-    assert (nn_setsockopt (sock, NN_SUB, NN_SUB_SUBSCRIBE, "", 0) >= 0);
-    assert (nn_connect (sock, url) >= 0);
-    
-    std::cout << "nn_connect succesfull " << name << " " << url << std::endl;*/
-    syncservice_client(url);
-    //receive(sock);
+    socketmng->close(sock1);
 }
 
 
 int main (const int argc, char **argv){
     
     Parameters params(argc, argv);
+    Socketmng socketmng;
     Type type = params.gettype();
     const char *url = params.geturl();
     switch (type) {
         case server:
-            pubserver(url, &params);
+            pubserver(url, &params, &socketmng);
             break;
         case client:
-            subclient (url, params.getname());
+            subclient (url, params.getname(), &socketmng);
             break;
         default:
             fprintf (stderr, "Usage: pubsub %s|%s <URL> <ARG> ...\n",
