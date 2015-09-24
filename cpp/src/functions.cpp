@@ -15,6 +15,13 @@
 using namespace std;
 using namespace std::chrono;
 
+string createurl(const char* plainurl, string port, string name){
+    string url = plainurl + port + name;
+    //cout << url << endl;
+    
+    return url;
+}
+
 int* createbuf(size_t bufsize){
     int *mymsg;
     mymsg = (int *) malloc(sizeof(*mymsg) * bufsize);

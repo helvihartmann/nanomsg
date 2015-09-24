@@ -48,7 +48,7 @@ void send(const char *url, size_t bufsize, size_t repeatsfix, vector<size_t>mess
         
         high_resolution_clock::time_point t1 = high_resolution_clock::now();
         for (size_t i = 0; i < repeats; i++){
-            index = (sz_msg*repeats)%bufsize;
+            index = (sz_msg*i)%bufsize;
             bytes = nn_send (sock1, (mymsg+index), sz_msg, 0);
         }
         high_resolution_clock::time_point t2 = high_resolution_clock::now();
@@ -77,7 +77,7 @@ void receive (const char *url, Socketmng *sockets){
 
         int *buf = NULL;
         bytes = nn_recv (sock0, &buf, NN_MSG, 0);
-        
+        assert(bytes >= 0);
         if(buf[0] == 0) end = true;
         /*checksum = checkbuf(buf, bytes);
         if (checksum != 1){

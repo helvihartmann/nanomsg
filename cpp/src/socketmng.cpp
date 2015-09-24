@@ -34,17 +34,25 @@ int Socketmng::open(const char *url, enum Sock socktype, enum Sockconnect sockco
             break;
     }
     
-    if (sock < 0)cout << "nn_socket failed with error code " << nn_strerror(nn_errno());
+    if (sock < 0)cout << "ERROR: nn_socket " << socktype << " failed with error code " << nn_strerror(nn_errno());
     int nnbufsize = numeric_limits<int>::max();
+    //cout << nnbufsize << endl;
     sockopt = nn_setsockopt (sock, NN_SOL_SOCKET, NN_SNDBUF, &nnbufsize, sizeof(nnbufsize));
-    if (sockopt < 0)cout << "nn_setsockopt failed with error code " << nn_strerror(nn_errno());
+    if (sockopt < 0)cout << "ERROR: nn_setsockopt failed with error code " << nn_strerror(nn_errno());
     
+    int connectnn, bindnn;
     switch (sockconnect) {
             case connect:
-                assert (nn_connect (sock, url) >= 0);
+                connectnn = nn_connect (sock, url);
+                if (connectnn < 0) cout << "ERROR: nn_connect failed with error code " << nn_strerror(nn_errno());
+                assert(connectnn >= 0);
+
             break;
             case bind:
-                assert (nn_bind (sock, url) >= 0);
+                bindnn = nn_bind (sock, url);
+                if (bindnn < 0) cout << "ERROR: nn_bind failed with error code " << nn_strerror(nn_errno());
+                assert(bindnn >= 0);
+
             break;
         default:
             break;
@@ -57,6 +65,6 @@ int Socketmng::open(const char *url, enum Sock socktype, enum Sockconnect sockco
 int Socketmng::close (int sock){
     
     int ret = nn_shutdown (sock, 1);//int how = 0 in original but returns error
-    if (ret != 0) cout << "nn_shutdwon failed with error code " << nn_strerror(nn_errno());
+    if (ret != 0) cout << "nn_shutdwon failed with error code " << ret << ": " << nn_strerror(nn_errno());
     return ret;
 }

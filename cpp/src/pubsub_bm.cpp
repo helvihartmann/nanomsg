@@ -21,14 +21,8 @@ int checkbuf (const int *buf, int bytes);
 void receive(int sock);
 void send(int sock, size_t buffsize, size_t repeats);
 int* createbuf(size_t bufsize);
+string createurl(const char* plainurl, string port, string name);
 
-
-string createurl(const char* plainurl, string port, string name){
-    string url = plainurl + port + name;
-    cout << url << endl;
-
-    return url;
-}
 
 int syncservice_client(const char *url, Socketmng *socketmng){
     

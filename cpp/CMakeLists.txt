@@ -15,6 +15,9 @@ target_link_libraries(pushpullbm /usr/local/lib/libnanomsg.a -pthread -lanl)
 add_executable(pushpullbmts src/pushpull-bm-ts.cpp src/parameters.cpp src/functions.cpp src/socketmng.cpp)
 target_link_libraries(pushpullbmts /usr/local/lib/libnanomsg.a -pthread -lanl)
 
+add_executable(pushpullbmts2 src/pushpull-bm-ts2.cpp src/parameters.cpp src/functions.cpp src/socketmng.cpp)
+target_link_libraries(pushpullbmts2 /usr/local/lib/libnanomsg.a -pthread -lanl)
+
 add_executable(reqrepbm src/reqrep_bm.cpp src/parameters.cpp src/functions.cpp src/socketmng.cpp)
 target_link_libraries(reqrepbm /usr/local/lib/libnanomsg.a -pthread -lanl)
 

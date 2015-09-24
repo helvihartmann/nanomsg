@@ -85,7 +85,7 @@ Parameters::Parameters(int argc, char **argv){
     }
     std::cout << "#type " << type << " " << name << " url " << url << "  buffer size " << buffersize << " repeats " << repeats << std::endl;
     
-    sz_end = buffersize;
+    sz_end = buffersize/4;
     if (sz_start <= sz_end){
         for (size_t p = sz_start; p <= sz_end; p = p * sz_factor){
             messagesizes.push_back(p);

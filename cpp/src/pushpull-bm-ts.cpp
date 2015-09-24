@@ -32,63 +32,78 @@ int open(const char *url, const char *socktype);
 
 void send(const char *url, size_t bufsize, size_t repeatsfix, vector<size_t>messagsizes, Socketmng *sockets){
 
-    int sock1 = sockets->open(url, push, connect);
-
-
     int *mymsg = createbuf(bufsize);
+    
     size_t repeats = repeatsfix;
     int factor = 2;
     size_t bytes = 0;
     size_t index = 0;
+    int sock1;
+    int end = 0;
     for (size_t sz_msg = messagsizes.front(); sz_msg < messagsizes.back(); sz_msg = sz_msg * factor){
+
         if (sz_msg >= 8192){
             repeats = (repeatsfix*1000)/sz_msg;
-         }
+        }
         if (repeats <= 1) repeats = 2;
         
         high_resolution_clock::time_point t1 = high_resolution_clock::now();
         for (size_t i = 0; i < repeats; i++){
-            index = (sz_msg*repeats)%bufsize;
+            
+            sock1 = sockets->open(url, push, connect);
+
+            index = 0; //(sz_msg*i)%bufsize;
             bytes = nn_send (sock1, (mymsg+index), sz_msg, 0);
+            cout << " send " << bytes << endl;
+            bytes = nn_send (sock1, &end, 4, 0);
+            cout << "send " << bytes << endl;
+            sockets->close(sock1);
         }
+
         high_resolution_clock::time_point t2 = high_resolution_clock::now();
-        
+    
         duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
         double time = time_span.count();
-        
+    
         cout << sz_msg*repeats << " " << repeats << " " << sz_msg << " " << time << " " << (sz_msg*repeats)/(time*1000000) << endl;
     }
-    mymsg[0] = 0;
-    nn_send (sock1, mymsg, 4, 0);
-    free(mymsg);
-
+    cout << "telling client to shutdown" << endl;
+    mymsg[0] = 2;
+    
+    sock1 = sockets->open(url, push, connect);
+    bytes = nn_send (sock1, mymsg, 4, 0);
+    assert(bytes >= 0);
     sockets->close(sock1);
+    
+    free(mymsg);
 }
 
 
 void receive (const char *url, Socketmng *sockets){
     
-    int sock0 = sockets->open(url, pull, bind);
+    int sock0;
     
     int bytes = 0;
     int checksum = 0;
     bool end = false;
     while (!end){
+        sock0 = sockets->open(url, pull, bind);
+        
+        bool close = false;
+        while (!close) {
+            int *buf = NULL;
+            bytes = nn_recv (sock0, &buf, NN_MSG, 0);
+            cout << bytes << " " << buf[0] << endl;
+            if(buf[0] == 0) close = true;
+            if(buf[0] == 2){
+                close = true;
+                end = true;
+            }
 
-        int *buf = NULL;
-        bytes = nn_recv (sock0, &buf, NN_MSG, 0);
-        
-        if(buf[0] == 0) end = true;
-        /*checksum = checkbuf(buf, bytes);
-        if (checksum != 1){
-            end = true;
-            if (checksum != 0) printf ("ERROR occured, received wrong numbers, checksum = %d\n", checksum);
-        }*/
-        
-        nn_freemsg (buf);
+            nn_freemsg (buf);
+        }
+        sockets->close(sock0);
     }
-
-    sockets->close(sock0);
 }
 
 
