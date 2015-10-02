@@ -34,24 +34,35 @@ int Socketmng::open(const char *url, enum Sock socktype, enum Sockconnect sockco
             break;
     }
     
-    if (sock < 0)cout << "ERROR: nn_socket " << socktype << " failed with error code " << nn_strerror(nn_errno());
+    if (sock < 0){
+        cout << "ERROR: nn_socket " << socktype << " failed with error code " << nn_strerror(nn_errno());
+        exit(1);
+    }
+    
     int nnbufsize = numeric_limits<int>::max();
     //cout << nnbufsize << endl;
     sockopt = nn_setsockopt (sock, NN_SOL_SOCKET, NN_SNDBUF, &nnbufsize, sizeof(nnbufsize));
-    if (sockopt < 0)cout << "ERROR: nn_setsockopt failed with error code " << nn_strerror(nn_errno());
+    if (sockopt < 0){
+        cout << "ERROR: nn_setsockopt failed with error code " << nn_strerror(nn_errno());
+        exit(1);
+    }
     
     int connectnn, bindnn;
     switch (sockconnect) {
             case connect:
                 connectnn = nn_connect (sock, url);
-                if (connectnn < 0) cout << "ERROR: nn_connect failed with error code " << nn_strerror(nn_errno());
-                assert(connectnn >= 0);
+            if (connectnn < 0){
+                cout << "ERROR: nn_connect failed with error code " << nn_strerror(nn_errno());
+                exit(1);
+            }
 
             break;
             case bind:
                 bindnn = nn_bind (sock, url);
-                if (bindnn < 0) cout << "ERROR: nn_bind failed with error code " << nn_strerror(nn_errno());
-                assert(bindnn >= 0);
+            if (bindnn < 0){
+                cout << "ERROR: nn_bind failed with error code " << nn_strerror(nn_errno());
+                exit(1);
+            }
 
             break;
         default:

@@ -99,9 +99,9 @@ void serverpush(const char *plainurl, size_t bufsize, size_t socketsmax, vector<
     int factor = 2;
     size_t nmbr_sockets = socketsmax;
     for (size_t sz_msg = messagsizes.front(); sz_msg < messagsizes.back(); sz_msg = sz_msg * factor){
-
-        if (sz_msg >= 8*8192){
-            nmbr_sockets = (socketsmax*30000)/sz_msg;
+    //for (size_t sz_msg = messagsizes.back(); sz_msg > messagsizes.front(); sz_msg = sz_msg / factor){
+        if (sz_msg >= 8192){
+            nmbr_sockets = (socketsmax*3000)/sz_msg;
         }
         if (nmbr_sockets <= 10) nmbr_sockets = 10;
         
@@ -151,7 +151,7 @@ int main (const int argc, char **argv)
     size_t repeats = params.getrepeats();
     const char *url = params.geturl();
     Type type = params.gettype();
-    int cycles = 10;
+    int cycles = 2;
     switch (type) {
         case server:{
             clientpull(url, &sockets, repeats, cycles);
