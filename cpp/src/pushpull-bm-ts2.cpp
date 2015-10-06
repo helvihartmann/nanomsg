@@ -50,6 +50,8 @@ void socketssend(vector<int>sockets, int sock_pckend, size_t nmbr_sockets, int* 
             double time = time_span.count();//
             cout << j << " " << i << " " << sz_msg << " " << time << " " << (sz_msg)/(time*1000000) << endl;//
         }
+        cout << endl;
+        cout << endl;
     }
     
     if(sockets.size() > nmbr_sockets){
@@ -116,7 +118,7 @@ void serverpush(const char *plainurl, size_t bufsize, size_t socketsmax, vector<
     //loop over package size and measure time----------------------------------------------------------
     int factor = 2;
     size_t nmbr_sockets = socketsmax;
-    for (size_t sz_msg = messagsizes.front(); sz_msg < messagsizes.back(); sz_msg = sz_msg * factor){
+    for (size_t sz_msg = messagsizes.front(); sz_msg <= messagsizes.back(); sz_msg = sz_msg * factor){
         if (sz_msg >= 8192){
             nmbr_sockets = (socketsmax*3000)/sz_msg;
         }

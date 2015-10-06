@@ -3,6 +3,7 @@
 Parameters::Parameters(int argc, char **argv){
     sz_start = 4;
     buffersize = 2147483648; //8589934592; //1073741824; //2147483648;
+    sz_end = buffersize/4;
     sz_factor = 2;
     int opt;
     repeats = 1000000;//2000000 good number for pushpull
@@ -15,8 +16,10 @@ Parameters::Parameters(int argc, char **argv){
     
     static struct option longopts[] = {
         { "help",             no_argument,             NULL,	     'h' },
+        { "start",            required_argument,       NULL,      'a' },
         { "buffersize",       required_argument,        NULL,       'b' },
         { "cycles",           required_argument,        NULL,       'c'},
+        { "end",              required_argument,        NULL,       'e'},
         { "repeats",          required_argument,        NULL,       'r' },
         { "subscribers",       required_argument,        NULL,       's' },
         { "type",             required_argument,        NULL,       't' },
@@ -24,7 +27,7 @@ Parameters::Parameters(int argc, char **argv){
         { NULL,	     0,			     NULL,	     0 }
     };
     
-    while ((opt = getopt_long (argc, argv, "hb:c:n:r:s:t:u:", longopts, NULL)) != -1)
+    while ((opt = getopt_long (argc, argv, "ha:b:c:e:n:r:s:t:u:", longopts, NULL)) != -1)
         switch (opt)
     {
         case 'h':
@@ -38,6 +41,14 @@ Parameters::Parameters(int argc, char **argv){
             std::cout << "--url         -u      url; Always enter url for process to connect. Program won't run without a given url" << std::endl;
 
             exit(1);
+        case 'a':
+            sz_start = atoi(optarg);
+            if (!(sz_start >= 0)) {
+                printf("ERROR -a: please enter vaild start package size (i.e. 2^n where n can be any natural number) \n");
+                exit(1);
+            }
+            break;
+
         case 'b':
             buffersize = atof(optarg);
             if (!(buffersize >= 0)) {
@@ -52,6 +63,14 @@ Parameters::Parameters(int argc, char **argv){
                 exit(1);
             }
             break;
+        case 'e':
+            sz_end = atoi(optarg);
+            if (!(sz_end >= 0)) {
+                printf("ERROR -e: please enter vaild end package size (i.e. 2^n where n can be any natural number) \n");
+                exit(1);
+            }
+            break;
+
         case 'n':
             name = optarg;
             break;
@@ -92,9 +111,8 @@ Parameters::Parameters(int argc, char **argv){
     if (strlen(url) == 0){
         std::cout << "ERROR: -u please enter valid url" << std::endl;
     }
-    std::cout << "#type " << type << " " << name << " url " << url << "  buffer size " << buffersize << " repeats " << repeats << " cycles " << cycles << std::endl;
+    std::cout << "#type " << type << " " << name << " url " << url << "  buffer size " << buffersize << " repeats " << repeats << " cycles " << cycles << " start package size " << sz_start << " end package size " << sz_end << std::endl;
     
-    sz_end = buffersize/4;
     if (sz_start <= sz_end){
         for (size_t p = sz_start; p <= sz_end; p = p * sz_factor){
             messagesizes.push_back(p);
