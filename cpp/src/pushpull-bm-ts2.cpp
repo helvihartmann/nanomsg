@@ -39,8 +39,16 @@ void socketssend(vector<int>sockets, int sock_pckend, size_t nmbr_sockets, int* 
     for (size_t j = 0; j < nmbr_sockets; j++){
         for(size_t i = 0; i < cycles; i++){
             index = (sz_msg*j)%bufsize;
+            
+            high_resolution_clock::time_point t1 = high_resolution_clock::now();//
             bytes = nn_send (sockets.at(j), (mymsg+index), sz_msg, 0);
-            //cout << "SERVER: sent "  << sz_msg << " bytes " << j << " times" << endl;
+            bytes = nn_recv (sock_pckend, &buf, NN_MSG, 0);//
+            high_resolution_clock::time_point t2 = high_resolution_clock::now();//
+            nn_freemsg(buf);//
+
+            duration<double> time_span = duration_cast<duration<double>>(t2 - t1);//
+            double time = time_span.count();//
+            cout << j << " " << i << " " << sz_msg << " " << time << " " << (sz_msg)/(time*1000000) << endl;//
         }
     }
     
@@ -61,9 +69,11 @@ void socketsreceive(vector<int>sockets, int sock_pckend, int cycles){
             int *buf = NULL;
             
             for(size_t i = 0; i < cycles; i++){
-                bytes = nn_recv (sockets.at(j), &buf, NN_MSG, 0);
-                //cout << "CLIENT: received from: " << j << " " << bytes << " bytes " << buf[0] << endl;
+                bytes = nn_recv(sockets.at(j), &buf, NN_MSG, 0);
                 assert(bytes>=0);
+                nn_send(sock_pckend, &pckend, 4, 0);//
+
+
                 
                 if(buf[0] == 0){
                     //cout << "CLIENT: closing package size" << endl;
@@ -125,8 +135,12 @@ void serverpush(const char *plainurl, size_t bufsize, size_t socketsmax, vector<
     }
 
     cout << "SERVER: closing client sockets" << endl;
+    sleep(1);
+    int *buf = NULL;
     int end = 2;
     nn_send (sockets.at(0), &end, 4, 0);
+    nn_recv(sock_pckend, &buf, NN_MSG, 0);
+    nn_freemsg(buf);
     socketlcose(sockets, socketmng, sock_pckend);
     free(mymsg);
 }
@@ -152,7 +166,7 @@ int main (const int argc, char **argv)
     size_t repeats = params.getrepeats();
     const char *url = params.geturl();
     Type type = params.gettype();
-    int cycles = 2;
+    int cycles = params.getcycles();
     switch (type) {
         case server:{
             clientpull(url, &sockets, repeats, cycles);

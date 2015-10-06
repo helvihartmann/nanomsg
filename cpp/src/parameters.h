@@ -24,6 +24,7 @@ private:
     int sz_factor;
     std::vector<size_t> messagesizes;
     int nmbrsubs;
+    int cycles;
 public:
     
     Parameters(int argc, char **argv);
@@ -41,6 +42,8 @@ public:
     std::vector<size_t> getmessagesizes() { return messagesizes; }
     
     int getnmbrsubs() { return nmbrsubs; }
+    
+    int getcycles() { return cycles; }
 
 };
 

@@ -10,11 +10,13 @@ Parameters::Parameters(int argc, char **argv){
     url = "";
     name = "";
     nmbrsubs = 2;
+    cycles = 1;
     //-------------------------------------------------------------------------------------------
     
     static struct option longopts[] = {
         { "help",             no_argument,             NULL,	     'h' },
         { "buffersize",       required_argument,        NULL,       'b' },
+        { "cycles",           required_argument,        NULL,       'c'},
         { "repeats",          required_argument,        NULL,       'r' },
         { "subscribers",       required_argument,        NULL,       's' },
         { "type",             required_argument,        NULL,       't' },
@@ -22,7 +24,7 @@ Parameters::Parameters(int argc, char **argv){
         { NULL,	     0,			     NULL,	     0 }
     };
     
-    while ((opt = getopt_long (argc, argv, "hb:n:r:s:t:u:", longopts, NULL)) != -1)
+    while ((opt = getopt_long (argc, argv, "hb:c:n:r:s:t:u:", longopts, NULL)) != -1)
         switch (opt)
     {
         case 'h':
@@ -40,6 +42,13 @@ Parameters::Parameters(int argc, char **argv){
             buffersize = atof(optarg);
             if (!(buffersize >= 0)) {
                 printf("ERROR -b: please enter vaild buffersize (i.e. 2^n where n can be any natural number) \n");
+                exit(1);
+            }
+            break;
+        case 'c':
+            cycles = atoi(optarg);
+            if (!(cycles >= 0)) {
+                printf("ERROR -c: please enter vaild number of cycles (i.e. unsigned int) \n");
                 exit(1);
             }
             break;
@@ -83,7 +92,7 @@ Parameters::Parameters(int argc, char **argv){
     if (strlen(url) == 0){
         std::cout << "ERROR: -u please enter valid url" << std::endl;
     }
-    std::cout << "#type " << type << " " << name << " url " << url << "  buffer size " << buffersize << " repeats " << repeats << std::endl;
+    std::cout << "#type " << type << " " << name << " url " << url << "  buffer size " << buffersize << " repeats " << repeats << " cycles " << cycles << std::endl;
     
     sz_end = buffersize/4;
     if (sz_start <= sz_end){
