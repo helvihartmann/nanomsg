@@ -26,7 +26,7 @@ using namespace std;
 using namespace std::chrono;
 
 int checkbuf (const int *buf, int bytes);
-int* createbuf(size_t bufsize);
+int* createbuf(size_t bufsize, int vote);
 int close (int sock);
 int open(const char *url, const char *socktype);
 string createurl(const char* plainurl, string port, string name);
@@ -40,25 +40,22 @@ void socketssend(vector<int>sockets, int sock_pckend, size_t nmbr_sockets, int* 
         for(size_t i = 0; i < cycles; i++){
             index = (sz_msg*j)%bufsize;
             
-            high_resolution_clock::time_point t1 = high_resolution_clock::now();//
+            //high_resolution_clock::time_point t1 = high_resolution_clock::now();//
             bytes = nn_send (sockets.at(j), (mymsg+index), sz_msg, 0);
             bytes = nn_recv (sock_pckend, &buf, NN_MSG, 0);//
-            high_resolution_clock::time_point t2 = high_resolution_clock::now();//
+            //high_resolution_clock::time_point t2 = high_resolution_clock::now();//
             nn_freemsg(buf);//
 
-            duration<double> time_span = duration_cast<duration<double>>(t2 - t1);//
-            double time = time_span.count();//
-            cout << j << " " << i << " " << sz_msg << " " << time << " " << (sz_msg)/(time*1000000) << endl;//
+            //duration<double> time_span = duration_cast<duration<double>>(t2 - t1);//
+            //double time = time_span.count();//
+            //cout << j << " " << i << " " << sz_msg << " " << time << " " << (sz_msg)/(time*1000000) << "\n";//
         }
-        cout << endl;
-        cout << endl;
+        //cout << "\n";
     }
     
-    if(sockets.size() > nmbr_sockets){
-        bytes = nn_send (sockets.at(nmbr_sockets), &end, 4, 0);
-        bytes = nn_recv (sock_pckend, &buf, NN_MSG, 0);
-        nn_freemsg(buf);
-    }
+    bytes = nn_send (sockets.at(nmbr_sockets), &end, 4, 0);
+    bytes = nn_recv (sock_pckend, &buf, NN_MSG, 0);
+    nn_freemsg(buf);
 }
 
 void socketsreceive(vector<int>sockets, int sock_pckend, int cycles){
@@ -113,11 +110,11 @@ void serverpush(const char *plainurl, size_t bufsize, size_t socketsmax, vector<
         sockets.push_back(sock1);
     }
     int sock_pckend = socketmng->open(createurl(plainurl, ":", to_string(6000)).c_str(), pull, connect);
-    int *mymsg = createbuf(bufsize);
+    int *mymsg = createbuf(bufsize,1);
     
     //loop over package size and measure time----------------------------------------------------------
     int factor = 2;
-    size_t nmbr_sockets = socketsmax;
+    size_t nmbr_sockets = socketsmax - 1;
     for (size_t sz_msg = messagsizes.front(); sz_msg <= messagsizes.back(); sz_msg = sz_msg * factor){
         if (sz_msg >= 8192){
             nmbr_sockets = (socketsmax*3000)/sz_msg;
@@ -141,7 +138,7 @@ void serverpush(const char *plainurl, size_t bufsize, size_t socketsmax, vector<
     int *buf = NULL;
     int end = 2;
     nn_send (sockets.at(0), &end, 4, 0);
-    nn_recv(sock_pckend, &buf, NN_MSG, 0);
+    //nn_recv(sock_pckend, &buf, NN_MSG, 0);
     nn_freemsg(buf);
     socketlcose(sockets, socketmng, sock_pckend);
     free(mymsg);

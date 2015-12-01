@@ -1,5 +1,6 @@
 #include "socketmng.h"
 
+
 int Socketmng::open(const char *url, enum Sock socktype, enum Sockconnect sockconnect){
     int sock;
     int timeout = 3000;

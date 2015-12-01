@@ -26,7 +26,7 @@ using namespace std;
 using namespace std::chrono;
 
 int checkbuf (const int *buf, int bytes);
-int* createbuf(size_t bufsize);
+int* createbuf(size_t bufsize, int vote);
 int close (int sock);
 int open(const char *url, const char *socktype);
 
@@ -35,7 +35,7 @@ void send(const char *url, size_t bufsize, size_t repeatsfix, vector<size_t>mess
     int sock1 = sockets->open(url, push, connect);
 
 
-    int *mymsg = createbuf(bufsize);
+    int *mymsg = createbuf(bufsize,1);
     size_t repeats = repeatsfix;
     int factor = 2;
     size_t bytes = 0;

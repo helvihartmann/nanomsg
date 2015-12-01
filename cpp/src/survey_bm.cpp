@@ -21,7 +21,7 @@ using namespace std;
 using namespace std::chrono;
 
 int checkbuf (const int *buf, int bytes);
-int* createbuf(size_t bufsize);
+int* createbuf(size_t bufsize, int vote);
 
 //char *date();
 //void receive(int sock);
@@ -41,7 +41,7 @@ int collectsurvey(int sock){
         checksum = checkbuf(buf, bytes);
         if (checksum != 1){
             if (checksum != 0) printf ("ERROR occured, received wrong numbers, checksum = %d\n", checksum);
-            break;
+            //break;
         }
         
         nn_freemsg (buf);
@@ -53,10 +53,10 @@ int collectsurvey(int sock){
 
 void surveyor(const char *url, vector<size_t> messagesizes, Socketmng *socketmng){
     int sock = socketmng->open(url, survey, bind);
-    sleep(1); // wait for connections
+    sleep(5); // wait for connections
     
     int bytes = 0;
-    int repeats = 2;
+    int repeats = 1;
     int sz_d = 0;
     size_t sz_msg = 0;
     size_t *test;
@@ -95,37 +95,40 @@ void surveyor(const char *url, vector<size_t> messagesizes, Socketmng *socketmng
 void respondent (const char *url, const char *name, size_t bufsize, Socketmng *socketmng){
     
     int sock = socketmng->open(url, respond, connect);
-    
+    int *buf = NULL;
     int bytes = 0;
-    int *mymsg = createbuf(bufsize);
+    int *mymsg = createbuf(bufsize,1);
     
     while(1){
-        size_t *buf = NULL;
         bytes = nn_recv (sock, &buf, NN_MSG, 0);
         //if(strlen(buf) == 0) break;
-        if(buf[0] == 1) break;
-        if (bytes >= 0)
-        {
-
-            bytes = nn_send (sock, mymsg, *buf, 0);
-            //assert (bytes == *buf);
-            nn_freemsg (buf);
+        if(buf[0] == 1){
+            cout << "CLIENT " << name << " terminating" << endl;
+            break;
         }
+        if (bytes >= 0) bytes = nn_send (sock, mymsg, *buf, 0);
     }
+    nn_freemsg (buf);
     cout << "CLIENT " << name << " terminating" << endl;
     socketmng->close(sock);
 }
 
-void idle (const char *url, const char *name, Socketmng *socketmng){
+void idle (const char *url, const char *name, size_t bufsize, Socketmng *socketmng){
     
     int sock = socketmng->open(url, respond, connect);
-
     int bytes = 0;
+    int *buf = NULL;//------extra---
+    int *mymsg = createbuf(bufsize,2);//------extra---
     while(1){
-        size_t *buf = NULL;
         bytes = nn_recv (sock, &buf, NN_MSG, 0);
-        if(buf[0] == 1) break;
+        if(buf[0] == 1){
+            cout << "IDLER " << name << " terminating" << endl;
+            break;
+        }
+        
+        if (bytes >= 0)bytes = nn_send (sock, mymsg, *buf, 0);//------extra---
     }
+    nn_freemsg (buf);
     cout << "IDLER " << name << " terminating" << endl;
     socketmng->close(sock);
 }
@@ -144,7 +147,7 @@ int main (const int argc, char **argv)
             respondent (url, params.getname(), params.getbuffersize(), &socketmng);
             break;
         case idler:
-            idle (url, params.getname(), &socketmng);
+            idle (url, params.getname(), params.getbuffersize(), &socketmng);
             break;
 
         default:

@@ -22,12 +22,12 @@ string createurl(const char* plainurl, string port, string name){
     return url;
 }
 
-int* createbuf(size_t bufsize){
+int* createbuf(size_t bufsize, int vote){
     int *mymsg;
     mymsg = (int *) malloc(sizeof(*mymsg) * bufsize);
     
     for (int i = 0; i < bufsize; i++){
-        mymsg[i] = 1; //rand();
+        mymsg[i] = vote; //rand();
     }
     cout << "Created buff of size " << bufsize << " Bytes" << endl;
     return mymsg;
@@ -36,12 +36,12 @@ int* createbuf(size_t bufsize){
 int checkbuf (const int *buf, int bytes){
     int j = 0;
     int sum = 0;
-    for ( int i = 0; i < bytes/4; i++){
+    for ( int i = 0; i < (bytes/sizeof(int)); i++){
         j = buf[i];
-        //printf ("%d", j);
+        cout << bytes << " " << i << " " << buf[i] << endl;
         sum = sum + j;
     }
-    //printf ("\n");
+    cout << endl;
     return sum/(bytes/sizeof(int));
 }
 
@@ -89,7 +89,7 @@ void send(int sock, size_t bufsize, size_t repeatsfix){
     int factor = 2;
     size_t endsz_msg = 2<<26;
     size_t startsz_msg = 4;
-    int *mymsg = createbuf(bufsize);
+    int *mymsg = createbuf(bufsize,1);
     
     for (size_t sz_msg = startsz_msg; sz_msg < endsz_msg; sz_msg = sz_msg * factor){
         sleep(1);

@@ -1,9 +1,9 @@
 #!/bin/bash
 
 r=500
-c=10
+c=5
 a=4
-e=16777216
+e=268435456
 
 if [[ "$SLURMD_NODENAME" ]]; then
 
