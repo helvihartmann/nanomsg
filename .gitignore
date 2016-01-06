@@ -1,0 +1,11 @@
+**/._*
+build/
+*.out
+*.in
+*.pdf
+*.gnuplot
+*.hist
+*.log
+*.ib
+nodelist*.txt
+runbm.sh
